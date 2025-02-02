@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Chart, registerables } from 'chart.js';
 import { WorkoutService } from '../../services/workout.service';
 import { User, WorkoutType, WORKOUT_TYPES } from '../../interfaces/workout.interface';
@@ -23,7 +23,10 @@ Chart.register(...registerables);
     </div>
   `
 })
-export class WorkoutChartComponent implements OnInit {
+export class WorkoutChartComponent implements OnInit, OnDestroy {
+  private workoutTypeChart: Chart<'pie' | 'bar', number[], string> | null = null;
+  private userProgressChart: Chart<'pie' | 'bar', number[], string> | null = null;
+
   constructor(private workoutService: WorkoutService) {}
 
   ngOnInit(): void {
@@ -31,6 +34,15 @@ export class WorkoutChartComponent implements OnInit {
       this.createWorkoutTypeChart(users);
       this.createUserProgressChart(users);
     });
+  }
+
+  ngOnDestroy() {
+    if (this.workoutTypeChart) {
+      this.workoutTypeChart.destroy();
+    }
+    if (this.userProgressChart) {
+      this.userProgressChart.destroy();
+    }
   }
 
   private createWorkoutTypeChart(users: User[]): void {
@@ -41,7 +53,7 @@ export class WorkoutChartComponent implements OnInit {
       return acc;
     }, {} as Record<WorkoutType, number>);
 
-    new Chart('workoutTypeChart', {
+    this.workoutTypeChart = new Chart<'pie', number[], string>('workoutTypeChart', {
       type: 'pie',
       data: {
         labels: Object.keys(workoutCounts),
@@ -74,7 +86,7 @@ export class WorkoutChartComponent implements OnInit {
       totalMinutes: user.workouts.reduce((sum, w) => sum + w.minutes, 0)
     }));
 
-    new Chart('userProgressChart', {
+    this.userProgressChart = new Chart<'bar', number[], string>('userProgressChart', {
       type: 'bar',
       data: {
         labels: userData.map(d => d.name),

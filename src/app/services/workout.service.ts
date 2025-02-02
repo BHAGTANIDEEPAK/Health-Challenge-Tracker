@@ -43,13 +43,19 @@ export class WorkoutService {
   }
 
   private initializeData(): void {
-    const storedData = localStorage.getItem(this.STORAGE_KEY);
-    if (!storedData) {
+    try {
+      const storedData = localStorage.getItem(this.STORAGE_KEY);
+      if (storedData) {
+        this.usersSubject.next(JSON.parse(storedData));
+      } else {
+        const initialData = this.getInitialData();
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(initialData));
+        this.usersSubject.next(initialData);
+      }
+    } catch (error) {
       const initialData = this.getInitialData();
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(initialData));
       this.usersSubject.next(initialData);
-    } else {
-      this.usersSubject.next(JSON.parse(storedData));
     }
   }
 
@@ -72,7 +78,11 @@ export class WorkoutService {
       users.push(user);
     }
     
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(users));
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(users));
+    } catch (error) {
+      console.error('Failed to save to localStorage:', error);
+    }
     this.usersSubject.next(users);
   }
 
@@ -84,7 +94,9 @@ export class WorkoutService {
 
   filterByWorkoutType(type: string): User[] {
     return this.usersSubject.value.filter(user =>
-      user.workouts.some(workout => workout.type === type)
+      user.workouts.some(workout => 
+        workout.type.trim().toLowerCase() === type.trim().toLowerCase()
+      )
     );
   }
 }

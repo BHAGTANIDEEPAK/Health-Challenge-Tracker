@@ -58,6 +58,8 @@ Run unit tests with code coverage:
 ng test --code-coverage
 ```
 
+![alt text](image-3.png)
+
 The code coverage report will be generated in the `coverage` directory.
 
 ## Build for Production
